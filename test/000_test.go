@@ -14,9 +14,9 @@ type DemoCore00[T any] struct{value T}
 func(the DemoCore00[T]) GetValue() (value T, e error) {
 	return the.value, nil;
 }
-type DemoCore01[T any] struct{}
-func(DemoCore01[T]) GetValue() (value T, e error) {
-	return *new(T), errors.New(`Error !!!`);
+type DemoCore01[T any] struct{err error}
+func(the DemoCore01[T]) GetValue() (value T, e error) {
+	return *new(T), the.err;
 }
 
 
@@ -123,5 +123,21 @@ func Test001(test *testing.T) {
 	}
 	if value03 != 36 {
 		test.Errorf(`[ERROR] 返回值异常 value: %d`, value03);
+	}
+}
+
+
+
+
+func Test004(test *testing.T) {
+	err := errors.New(`#`);
+
+	Register[struct{}](DemoCore01[struct{}]{err: err});
+
+	_, e := Get[struct{}]();
+	if e == nil {
+		test.Error(`[ERROR] 未出现预期的异常`);
+	} else if e != err {
+		test.Errorf(`[ERROR] 抛出的异常有误，e: %s`, e.Error());
 	}
 }
