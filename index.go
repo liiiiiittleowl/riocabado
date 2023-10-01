@@ -6,8 +6,9 @@ package riocabado
 var _Pool = map[any]any{};
 
 func Register[T any](core Core[T]) {
-	var key T;
+	if core == nil {return;}
 
+	var key T;
 	_Pool[key] = core;
 }
 func Get[T any]() (value T, e error) {
