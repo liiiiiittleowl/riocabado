@@ -59,6 +59,27 @@ func TestFunction(test *testing.T) {
 }
 
 
+type DemoCore07 struct{}
+func(DemoCore07) Example(ctx Context) (value uint, e error) {
+	return 24, nil;
+}
+
+func TestSecurity(test *testing.T) {
+	Register[uint](nil);
+	_, e := Get[uint]();
+	if e == nil {test.Errorf("未检查出nil;");}
+	if _, ok := e.(NoCoreFoundError); !ok {test.Errorf("未返回预定错误\n");}
+
+	Register[uint](DemoCore00{});
+	Register[uint](DemoCore07{});
+	value, e := Get[uint]();
+	if e != nil {test.Errorf("出现错误 message: %v\n", e);}
+	if value == 12 {test.Errorf("未更新依赖\n");}
+}
+
+
+
+
 type DemoCore04[T any] struct{}
 func(DemoCore04[T]) Example(ctx Context) (value T, e error) {
 	_, e = DependOn[T](ctx);
