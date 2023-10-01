@@ -57,3 +57,57 @@ func TestFunction(test *testing.T) {
 	if e != nil {test.Errorf("出现错误 message: %v\n", e);}
 	if value00 != 12 {test.Errorf("意外的返回值 value: %v\n", value00)}
 }
+
+
+type DemoCore04[T any] struct{}
+func(DemoCore04[T]) Example(ctx Context) (value T, e error) {
+	_, e = DependOn[T](ctx);
+	if e != nil {return *new(T), e;}
+
+	return *new(T), nil;
+}
+type DemoCore05[T any] struct{}
+func(DemoCore05[T]) Example(ctx Context) (value T, e error) {
+	value, e = func(ctx Context) (value T, e error) {
+		return DependOn[T](ctx);
+	}(ctx);
+	if e != nil {return *new(T), e;}
+
+	return *new(T), nil;
+}
+type DemoCore06[T any] struct{}
+func(DemoCore06[T]) Example(ctx Context) (value T, e error) {
+	channel := make(chan struct{value T; e error}, 1);
+	go func(ctx Context, channel chan struct{value T; e error}){
+		value, e := DependOn[T](ctx);
+		channel <- struct{value T; e error}{value: value, e: e};
+	} (ctx, channel);
+
+	pack := <-channel;
+	if pack.e != nil {return *new(T), pack.e;}
+
+	return *new(T), nil;
+}
+
+func TestDependencyLoopFunction(test *testing.T) {
+	Register[uint8](DemoCore04[uint8]{});
+	_, e := Get[uint8]();
+	if e == nil {test.Errorf("未返回预定错误\n");}
+	if _, ok := e.(CircularDependencyError); !ok {
+		test.Errorf("出现意外的错误 message: %v\n", e);
+	}
+
+	Register[uint8](DemoCore05[uint8]{});
+	_, e = Get[uint8]();
+	if e == nil {test.Errorf("未返回预定错误\n");}
+	if _, ok := e.(CircularDependencyError); !ok {
+		test.Errorf("出现意外的错误 message: %v\n", e);
+	}
+
+	Register[uint8](DemoCore06[uint8]{});
+	_, e = Get[uint8]();
+	if e == nil {test.Errorf("未返回预定错误\n");}
+	if _, ok := e.(CircularDependencyError); !ok {
+		test.Errorf("出现意外的错误 message: %v\n", e);
+	}
+}
