@@ -10,9 +10,9 @@ type SingletonCore[T any] struct{
 	has bool
 
 	locker sync.Locker
-	getter func() (value T, e error)
+	getter func(ctx Context) (value T, e error)
 }
-func(the *SingletonCore[T]) GetValue() (value T, e error) {
+func(the *SingletonCore[T]) Example(ctx Context) (value T, e error) {
 	if the.has {return the.value, nil;}
 
 	the.locker.Lock();
@@ -21,7 +21,7 @@ func(the *SingletonCore[T]) GetValue() (value T, e error) {
 	if the.has {
 		return the.value, nil;
 	} else {
-		value, e = the.getter();
+		value, e = the.getter(ctx);
 		if e != nil {return *new(T), e;}
 
 		the.value = value;
@@ -30,7 +30,9 @@ func(the *SingletonCore[T]) GetValue() (value T, e error) {
 	}
 }
 
-func Singleton[T any](getter func() (value T, e error)) Core[T] {
+func Singleton[T any](
+	getter func(ctx Context) (value T, e error),
+) Core[T] {
 	return &SingletonCore[T]{
 		value: *new(T),
 		has: false,
@@ -46,12 +48,12 @@ func Singleton[T any](getter func() (value T, e error)) Core[T] {
 type PrototypeCore[T any] struct{
 	prototype T
 }
-func(the *PrototypeCore[T]) GetValue() (value T, e error) {
+func(the PrototypeCore[T]) Example(ctx Context) (value T, e error) {
 	return the.prototype, nil;
 }
 
 func Prototype[T any](value T) Core[T] {
-	return &PrototypeCore[T]{
+	return PrototypeCore[T]{
 		prototype: value,
 	};
 }
@@ -62,12 +64,12 @@ func Prototype[T any](value T) Core[T] {
 type FactoryCore[T any] struct{
 	function func() (value T, e error)
 }
-func(the *FactoryCore[T]) GetValue() (value T, e error) {
+func(the FactoryCore[T]) Example(ctx Context) (value T, e error) {
 	return the.function();
 }
 
 func Factory[T any](function func() (value T, e error)) Core[T] {
-	return &FactoryCore[T]{
+	return FactoryCore[T]{
 		function: function,
 	};
 }
